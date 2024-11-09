@@ -1,0 +1,9 @@
+
+.invisible-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
