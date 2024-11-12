@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import { validate } from '../Utils/validate';
+import {  createUserWithEmailAndPassword,signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from '../Utils/firebase';
+import { useDispatch } from 'react-redux';
+import { adduser } from '../Utils/userSlice';
+import { useNavigate } from 'react-router-dom';
 
 const SignIn = () => {
+  
   const [UserName, setUserName] = useState("");
   const [Password, setPassword] = useState("");
   const [IsSignIn, setIsSignIn] = useState(true);
   const [message, setMessage] = useState(null);
+  const dispatch=useDispatch();
+  const navigate=useNavigate()
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     if (name === 'UserName') {
       setUserName(value);
     }
@@ -21,22 +30,69 @@ const SignIn = () => {
   const handleclick = (e) => {
     e.preventDefault();
     const validationMessage = validate(UserName, Password);
-    setMessage(validationMessage);
-  };
+      if(validationMessage) {
+      setMessage(validationMessage);
+      }
+      if(IsSignIn){
+        signInWithEmailAndPassword(auth, UserName, Password)
+          .then((userCredential) => {
+            // Signed in 
+            const user = userCredential.user;
+            console.log(user);
+            dispatch(adduser({uid:user.uid,
+              email: user.email,
+      displayName: user.displayName
+            }));
+            navigate('/browse')
 
+
+          })
+          .catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            setMessage(error +" " +errorMessage);
+          });
+      }
+      else{
+        
+createUserWithEmailAndPassword(auth, UserName, Password)
+  .then((userCredential) => {
+    // Signed up 
+    const user = userCredential.user;
+    console.log(user);
+    dispatch(adduser({uid:user.uid,
+      email: user.email,
+displayName: user.displayName
+    }));
+    navigate('/browse')
+
+
+
+  })
+  .catch((error) => {
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    setMessage(error +" " +errorMessage);
+
+    // ..
+  });
+      }
+      
+  }
+
+  
   const HandleSignIn = (e) => {
     e.preventDefault();
-
     setIsSignIn(!IsSignIn);
   };
 
   useEffect(() => {
     console.log("useEffect: " + UserName + " " + Password);
-  }, [UserName, Password]);
+  }, []);
 
   return (
     <div className="relative h-screen w-full bg-black">
-      <Header />
+    <Header/>
       
       <img
         className="absolute inset-0 h-full w-full object-cover"
